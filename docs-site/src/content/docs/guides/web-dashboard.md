@@ -76,6 +76,13 @@ one column and model/effort controls share another. On narrower screens, control
 labels in the same reading order. Long version labels are shortened visually; hover the version
 badge or the version value to read the full value.
 
+Shared dropdowns shorten long selected names visually; open the menu to read the full
+names in wrapping options. Portaled menus stay within the viewport.
+At mobile widths, their triggers and options have a minimum 44 CSS-pixel height.
+If a control becomes unavailable while saving, or its options become empty, its menu
+closes. Open it again after the control is ready; a completed update does not reopen
+the previous menu. Arrow keys, Home/End, Enter, Escape, and Tab remain available.
+
 ## What you can do
 
 | Area | What it does |

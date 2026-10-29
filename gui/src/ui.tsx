@@ -119,6 +119,13 @@ export function Select({ value, options, onChange, disabled, id, label, describe
   const menuRef = useRef<HTMLDivElement>(null);
   const optionId = useCallback((index: number) => `${listboxId}-${index}`, [listboxId]);
   const current = options.find(o => o.value === value);
+  const expanded = open && !disabled && options.length > 0;
+  // Reset the interaction before rendering unavailable options. Recovery must
+  // require a fresh open action, rather than reopening a stale selection.
+  if (open && !expanded) {
+    setOpen(false);
+    setHighlightIndex(null);
+  }
   const selectedIndex = options.length === 0 ? 0 : Math.max(0, options.findIndex(o => o.value === value));
   // While open, keyboard/hover highlight wins; while closed, follow the selected value.
   // Clamp so aria-activedescendant never points at a missing option after shrink/reorder.
@@ -246,14 +253,14 @@ export function Select({ value, options, onChange, disabled, id, label, describe
     }
   };
 
-  const activeDescendant = open && options[activeIndex] ? optionId(activeIndex) : undefined;
+  const activeDescendant = expanded && options[activeIndex] ? optionId(activeIndex) : undefined;
 
   // A shared controller can flip `disabled` while the menu is already open (for
   // example `priorityUpdatingId` starts an order write). The trigger alone being
   // disabled must not leave the rendered option buttons able to call `onChange`
   // and silently drop the second update, so the dropdown is not rendered (and the
   // option buttons are disabled) whenever `disabled` is true.
-  const dropdown = open && !disabled ? (
+  const dropdown = expanded ? (
     <div
       ref={menuRef}
       id={listboxId}
@@ -297,13 +304,13 @@ export function Select({ value, options, onChange, disabled, id, label, describe
         onKeyDown={onTriggerKeyDown}
         disabled={disabled}
         aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={open ? listboxId : undefined}
+        aria-expanded={expanded}
+        aria-controls={expanded ? listboxId : undefined}
         aria-activedescendant={activeDescendant}
         aria-label={label}
       >
         <span>{current?.label ?? value}</span>
-        <IconChevron style={{ width: 12, height: 12, color: "var(--muted)", transform: open ? "rotate(90deg)" : "none", transition: "transform .12s" }} />
+        <IconChevron style={{ width: 12, height: 12, color: "var(--muted)", transform: expanded ? "rotate(90deg)" : "none", transition: "transform .12s" }} />
       </button>
       {portal ? (dropdown && createPortal(dropdown, document.body)) : dropdown}
     </div>

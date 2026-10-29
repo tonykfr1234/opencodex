@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 
 async function styles(): Promise<string> {
-  return Bun.file(new URL("../src/styles.css", import.meta.url)).text();
+  return (await Promise.all(["../src/styles/select.css", "../src/styles.css"].map(path => Bun.file(new URL(path, import.meta.url)).text()))).join("\n");
 }
 
 /**

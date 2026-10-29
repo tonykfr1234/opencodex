@@ -32,6 +32,32 @@ const OPTIONS = [
   { value: "c", label: "Charlie" },
 ];
 
+for (const portal of [true, false]) {
+  for (const unavailable of ["disabled", "empty"] as const) {
+    test(`open select closes when ${unavailable} and stays closed after recovery (portal=${portal})`, async () => {
+      const props = { value: "a", options: OPTIONS, onChange: () => {}, label: "Pick", portal };
+      const { root, trigger } = await mountSelect(<Select {...props} />);
+      await act(async () => { key(trigger, "ArrowDown"); });
+      expect(listbox()).not.toBeNull();
+
+      await act(async () => {
+        root.render(<Select {...props} disabled={unavailable === "disabled"} options={unavailable === "empty" ? [] : OPTIONS} />);
+      });
+      expect(listbox() === null).toBe(true);
+      expect(trigger.getAttribute("aria-expanded")).toBe("false");
+      expect(trigger.getAttribute("aria-controls")).toBeNull();
+      expect(trigger.getAttribute("aria-activedescendant")).toBeNull();
+
+      await act(async () => { root.render(<Select {...props} />); });
+      expect(listbox()).toBeNull();
+      expect(trigger.getAttribute("aria-expanded")).toBe("false");
+      await act(async () => { key(trigger, "ArrowDown"); });
+      expect(listbox()).not.toBeNull();
+      await act(async () => { root.unmount(); });
+    });
+  }
+}
+
 async function mountSelect(node: React.ReactElement): Promise<{ root: Root; trigger: HTMLButtonElement; host: HTMLDivElement }> {
   const { createRoot } = await import("react-dom/client");
   const host = document.createElement("div");

@@ -7,6 +7,7 @@
    `data-theme` (or the OS) picks the side.
    ============================================================================ */
 
+@import "./styles/select.css";
 @import "./styles/provider-catalog.css";
 @import "./styles/provider-quota.css";
 @import "./styles/provider-workspace-shell.css";
@@ -1146,74 +1147,6 @@ select.input { appearance: none; }
 .select-sm:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
 .select-sm:hover:not(:disabled) { border-color: var(--faint); box-shadow: 0 2px 12px rgb(0 0 0 / 0.10); }
 .select-sm:disabled { opacity: 0.5; cursor: default; backdrop-filter: none; -webkit-backdrop-filter: none; }
-
-/* Custom select (replaces native <select>) */
-.select-trigger {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 12px; border-radius: var(--radius-pill);
-  background: color-mix(in oklab, canvas 75%, transparent);
-  backdrop-filter: blur(12px) saturate(1.3);
-  -webkit-backdrop-filter: blur(12px) saturate(1.3);
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.06);
-  color: var(--text); font: inherit; font-size: var(--text-control); line-height: var(--leading-ui); cursor: pointer;
-  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
-  white-space: nowrap;
-}
-.select-trigger:hover:not(:disabled) { border-color: var(--faint); box-shadow: 0 2px 12px rgb(0 0 0 / 0.10); }
-.select-trigger:disabled { opacity: 0.5; cursor: default; }
-.select-dropdown {
-  position: absolute; top: calc(100% + 4px); left: 0; z-index: var(--z-popover);
-  min-width: 100%; max-height: 280px; overflow-y: auto;
-  /*
-    Opaque fill, not glass. A portaled menu opens over rows beneath its trigger
-    (Subagents → Settings: Preferred model covers the Tell Codex switch). A
-    translucent canvas mix let those controls show through and look like they
-    floated above every layer. Keep backdrop-filter for edge refraction only —
-    the fill itself must hide what sits behind the panel.
-  */
-  background: var(--surface);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 4px; box-shadow: 0 8px 32px rgb(0 0 0 / 0.16);
-}
-.select-dropdown-portal {
-  /* Position (top/bottom/left/right/maxHeight) comes from computeSelectMenuStyle. */
-  position: fixed;
-  top: auto;
-  left: auto;
-  right: auto;
-  bottom: auto;
-}
-.select-dropdown-right { left: auto !important; right: 0; }
-/* Beside-placement lives inside the sidebar, which establishes a containing block via
-   backdrop-filter (and a transform on the mobile drawer) — so a fixed-position fix would
-   resolve against the sidebar, not the viewport. Anchor the menu's BOTTOM to the trigger row
-   instead: the locale control sits in the footer, so the menu grows upward into empty sidebar
-   space. The height bound is what makes this count-independent — adding a locale used to push
-   the menu past the sidebar edge. */
-.select-dropdown-beside { top: auto; bottom: 0; left: calc(100% + 12px); right: auto; min-width: 10rem; max-height: min(60vh, 20rem); overflow-y: auto; }
-.select-option {
-  display: block; width: 100%; text-align: left;
-  padding: 7px 12px; border: none; border-radius: var(--radius-sm);
-  background: transparent; color: var(--text); font: inherit; font-size: var(--text-control); line-height: var(--leading-ui);
-  cursor: pointer; transition: background var(--motion-fast), box-shadow var(--motion-fast);
-  white-space: nowrap;
-}
-/* Pointer hover alone — softer than keyboard focus so the two cues stay distinct. */
-.select-option:hover:not(.select-option-active) { background: var(--hover); }
-/* Selected value (committed). */
-.select-option.active { background: var(--accent-soft); color: var(--accent); font-weight: var(--weight-semibold); }
-/* Keyboard / aria-activedescendant focus — visible without relying on :hover. */
-.select-option-active {
-  background: var(--hover);
-}
-/* Selected + keyboard-highlighted: full inset ring (not a left stripe). */
-.select-option.active.select-option-active {
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1px var(--accent);
-}
 
 /* ---- switch ---- */
 .switch {

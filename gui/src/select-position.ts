@@ -32,13 +32,31 @@ function viewportWidth() {
   return typeof window !== "undefined" ? window.innerWidth : 1024;
 }
 
+function portalZoom() {
+  if (typeof window === "undefined") return 1;
+  // The portal is a direct child of body. Rects include CSS zoom, but its fixed
+  // position and size declarations use the unscaled html/body coordinate space.
+  return [window.document.documentElement, window.document.body].reduce((scale, element) => {
+    if (!element) return scale;
+    const zoom = Number.parseFloat(window.getComputedStyle(element).zoom);
+    return scale * (Number.isFinite(zoom) && zoom > 0 ? zoom : 1);
+  }, 1);
+}
+
 export function computeSelectMenuStyle(
-  trigger: SelectMenuTriggerRect,
+  viewportTrigger: SelectMenuTriggerRect,
   { align, placement = "below", menuHeight = MAX_MENU_HEIGHT_PX }: SelectMenuStyleOptions = {},
 ): CSSProperties {
+  const zoom = portalZoom();
+  const trigger = {
+    top: viewportTrigger.top / zoom, bottom: viewportTrigger.bottom / zoom,
+    left: viewportTrigger.left / zoom, right: viewportTrigger.right / zoom,
+    width: viewportTrigger.width / zoom, height: viewportTrigger.height / zoom,
+  };
   const measuredHeight = Math.min(Math.max(menuHeight, MIN_MENU_HEIGHT_PX), MAX_MENU_HEIGHT_PX);
-  const vh = viewportHeight();
-  const vw = viewportWidth();
+  const vh = viewportHeight() / zoom;
+  const vw = viewportWidth() / zoom;
+  const availableWidth = Math.max(0, vw - VIEWPORT_PAD_PX * 2);
 
   if (placement === "right") {
     const spaceBelow = vh - trigger.top - VIEWPORT_PAD_PX;
@@ -51,7 +69,8 @@ export function computeSelectMenuStyle(
         position: "fixed",
         left,
         bottom: vh - trigger.top + FLIP_GAP_PX,
-        minWidth: BESIDE_MIN_WIDTH_PX,
+        minWidth: Math.min(BESIDE_MIN_WIDTH_PX, availableWidth),
+        maxWidth: Math.max(0, vw - left - VIEWPORT_PAD_PX),
         maxHeight: Math.max(MIN_MENU_HEIGHT_PX, Math.min(MAX_MENU_HEIGHT_PX, trigger.top - VIEWPORT_PAD_PX - MENU_GAP_PX)),
       };
     }
@@ -60,13 +79,18 @@ export function computeSelectMenuStyle(
       position: "fixed",
       top: trigger.top,
       left,
-      minWidth: BESIDE_MIN_WIDTH_PX,
+      minWidth: Math.min(BESIDE_MIN_WIDTH_PX, availableWidth),
+      maxWidth: Math.max(0, vw - left - VIEWPORT_PAD_PX),
       maxHeight: Math.max(MIN_MENU_HEIGHT_PX, Math.min(MAX_MENU_HEIGHT_PX, vh - trigger.top - VIEWPORT_PAD_PX)),
     };
   }
 
   const effectiveAlign = align ?? (trigger.right > vw / 2 ? "right" : "left");
-  const width = Math.max(trigger.width, 0);
+  const width = Math.min(Math.max(trigger.width, 0), availableWidth);
+  const anchor = effectiveAlign === "right"
+    ? Math.max(VIEWPORT_PAD_PX, Math.min(vw - trigger.right, vw - VIEWPORT_PAD_PX - width))
+    : Math.max(VIEWPORT_PAD_PX, Math.min(trigger.left, vw - VIEWPORT_PAD_PX - width));
+  const maxWidth = Math.max(0, vw - anchor - VIEWPORT_PAD_PX);
   const spaceBelow = vh - trigger.bottom - VIEWPORT_PAD_PX;
   const spaceAbove = trigger.top - VIEWPORT_PAD_PX;
   const flipUp = measuredHeight + MENU_GAP_PX > spaceBelow && spaceAbove > spaceBelow;
@@ -76,12 +100,13 @@ export function computeSelectMenuStyle(
       position: "fixed",
       bottom: vh - trigger.top + FLIP_GAP_PX,
       minWidth: width,
+      maxWidth,
       maxHeight: Math.max(0, Math.min(MAX_MENU_HEIGHT_PX, spaceAbove - MENU_GAP_PX)),
     };
     if (effectiveAlign === "right") {
-      style.right = Math.max(VIEWPORT_PAD_PX, vw - trigger.right);
+      style.right = anchor;
     } else {
-      style.left = Math.max(VIEWPORT_PAD_PX, Math.min(trigger.left, vw - VIEWPORT_PAD_PX - width));
+      style.left = anchor;
     }
     return style;
   }
@@ -90,12 +115,13 @@ export function computeSelectMenuStyle(
     position: "fixed",
     top: trigger.bottom + MENU_GAP_PX,
     minWidth: width,
+    maxWidth,
     maxHeight: Math.max(0, Math.min(MAX_MENU_HEIGHT_PX, spaceBelow - MENU_GAP_PX)),
   };
   if (effectiveAlign === "right") {
-    style.right = Math.max(VIEWPORT_PAD_PX, vw - trigger.right);
+    style.right = anchor;
   } else {
-    style.left = Math.max(VIEWPORT_PAD_PX, Math.min(trigger.left, vw - VIEWPORT_PAD_PX - width));
+    style.left = anchor;
   }
   return style;
 }
