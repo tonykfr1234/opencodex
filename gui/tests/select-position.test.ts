@@ -19,6 +19,53 @@ afterEach(() => {
   }
 });
 
+for (const [htmlZoom, bodyZoom] of [[2, 1], [1, 2], [1.25, 1.6]]) {
+  test(`portal coordinates account for html zoom ${htmlZoom} and body zoom ${bodyZoom}`, () => {
+    testWindow.document.documentElement.style.zoom = String(htmlZoom);
+    testWindow.document.body.style.zoom = String(bodyZoom);
+    const scale = htmlZoom * bodyZoom;
+    const trigger = { top: 120, bottom: 156, left: 120, right: 320, width: 200, height: 36 };
+    const below = computeSelectMenuStyle(trigger);
+    expect(below.top).toBeCloseTo(trigger.bottom / scale + 4);
+    expect(below.left).toBeCloseTo(trigger.left / scale);
+    expect(below.minWidth).toBeCloseTo(trigger.width / scale);
+    expect(Number(below.left) + Number(below.maxWidth)).toBeCloseTo(1024 / scale - 8);
+
+    const above = computeSelectMenuStyle({ ...trigger, top: 700, bottom: 736 });
+    expect(above.bottom).toBeCloseTo((800 - 700) / scale + 8);
+    expect(above.top).toBeUndefined();
+    expect(Number(above.bottom) + Number(above.maxHeight)).toBeLessThanOrEqual(800 / scale);
+
+    const beside = computeSelectMenuStyle(trigger, { placement: "right" });
+    expect(beside.top).toBeCloseTo(trigger.top / scale);
+    expect(beside.left).toBeCloseTo(trigger.right / scale + 12);
+    expect(Number(beside.left) + Number(beside.maxWidth)).toBeCloseTo(1024 / scale - 8);
+  });
+}
+
+for (const width of [360, 412, 440]) {
+  test(`long-content menus stay within the ${width}px viewport for each anchor`, () => {
+    Object.defineProperty(testWindow, "innerWidth", { configurable: true, value: width });
+    for (const top of [120, 700]) {
+      const trigger = { top, bottom: top + 44, left: 24, right: width - 24, width: width - 48, height: 44 };
+      for (const options of [{ align: "left" }, { align: "right" }, { placement: "right" }] as const) {
+        const style = computeSelectMenuStyle(trigger, options);
+        const anchor = Number(style.left ?? style.right);
+        expect(anchor).toBeGreaterThanOrEqual(8);
+        expect(anchor + Number(style.maxWidth)).toBeLessThanOrEqual(width - 8);
+        expect(Number(style.minWidth)).toBeLessThanOrEqual(Number(style.maxWidth));
+      }
+    }
+  });
+}
+
+test("an oversized off-screen trigger cannot force its menu outside the viewport", () => {
+  const style = computeSelectMenuStyle({ top: 120, bottom: 156, left: -500, right: 1500, width: 2000, height: 36 });
+  expect(style.right).toBe(8);
+  expect(style.minWidth).toBe(1008);
+  expect(style.maxWidth).toBe(1008);
+});
+
 test("opens below by default when there is room under the trigger", () => {
   const style = computeSelectMenuStyle({
     top: 120,

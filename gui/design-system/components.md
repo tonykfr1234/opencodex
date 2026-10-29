@@ -23,6 +23,14 @@
 
 ## Inputs and selects
 
+Shared `Select` layout rules live in `src/styles/select.css`, imported by `styles.css`.
+Long selected labels ellipsize within their trigger; open options wrap to show the
+full name. Portaled menus are bounded by the viewport. At widths up to 760 CSS pixels, triggers and options use
+`--control-touch` (44 CSS pixels). Disabled or empty transitions close the menu and
+clear its ARIA relationships; returning to ready requires a new open action.
+Portaled menu geometry converts viewport rectangles into the cumulative HTML/body
+CSS zoom coordinate space before applying fixed positions and size bounds.
+
 - `.input`, `.select-trigger`, `.select-option`, `.field-label`을 재사용한다.
 - 라벨은 label text, 입력값은 control text를 사용한다.
 - placeholder는 `--faint`, 값은 `--text`, 오류는 `--red`를 사용한다.
